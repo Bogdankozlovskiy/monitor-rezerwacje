@@ -9,7 +9,7 @@ time_arr = ["09:00", "09:10", "09:20", "09:30", "09:40", "09:50"]
 url = "https://rezerwacje.duw.pl/reservations/updateFormData/{order_id}/{schedule}"
 loading = ["-", "\\", "|", "/"]
 locked_ids = []
-states = ["-" for _ in enumerate(time_arr)]
+states = ["-"] * len(time_arr)
 
 
 async def worker(client, worker_index, time):
@@ -20,32 +20,29 @@ async def worker(client, worker_index, time):
         try:
             response = await client.post("https://rezerwacje.duw.pl/reservations/lock", data=data)
         except Exception as exc:
-            states[worker_index] = "*"
+            states[worker_index] = f"{time} * "
         else:
             if pattern := re.match(r"^OK (?P<order_id>\d*)$", response.text):
-                order_id=pattern.groupdict()["order_id"]
-                states[worker_index] = f"{time}/{order_id} "
+                order_id = pattern.groupdict()["order_id"]
+                states[worker_index] = f"{time} {order_id} "
                 locked_ids.append(order_id)
             else:
-                states[worker_index] = loading[index % len(loading)]
+                states[worker_index] = f"{time} {loading[index % len(loading)]} "
                 index += 1
         print("\r", ' '.join(states), end='')
 
 
-async with AsyncClient(transport=AsyncHTTPTransport(verify=False, retries=50)) as client:
+async with AsyncClient(transport=AsyncHTTPTransport(verify=False, retries=50), timeout=30) as client:
     await client.get("https://rezerwacje.duw.pl/pol/login")
     await client.post(
         "https://rezerwacje.duw.pl/pol/login",
         data={
             "data[_Token][key]": "abd7ebbf52babfc3175e6056c25ce7a5fcde12dd",
             "data[User][email]": "email@email.email",
-            "data[User][password]": "password@passwrod",
+            "data[User][password]": "pssword@paswword",
             "data[_Token][fields]": "950d15a2cfde63e0ea9e1fa1b85587c9ff982433%3AUser.return_to"
         }
     )
     await gather(*[worker(client, index, time) for index, time in enumerate(time_arr)])
     final_url = url.format(order_id=locked_ids[-1], schedule=data_template["schedule"])
     webbrowser.open(final_url)
-    
-
-# 92012416933
