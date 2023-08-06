@@ -4,8 +4,7 @@ import webbrowser
 import re
 
 
-# data_template = {"time": "2023-08-14 {time}", "queue": 112, "schedule": 29}
-data_template = {"time": "2023-08-14 {time}", "queue": 100, "schedule": 28} # TEST !!
+data_template = {"time": "2023-08-14 {time}", "queue": 112, "schedule": 29}
 time_arr = ["09:00", "09:10", "09:20", "09:30", "09:40", "09:50"]
 url = "https://rezerwacje.duw.pl/reservations/updateFormData/{order_id}/{schedule}"
 loading = ["-", "\\", "|", "/"]
