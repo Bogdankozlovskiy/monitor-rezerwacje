@@ -1,6 +1,6 @@
 from requests import Session
 from warnings import simplefilter
-from datetime import timedelta, datetime
+from datetime import datetime
 import re
 
 
@@ -12,8 +12,15 @@ white = " " * 30
 
 
 data = {"time": "2023-08-21 {time}", "queue": 112, "schedule": 26}
-time_range = ["11:00:00", "11:10:00", "11:20:00", "11:30:00", "11:40:00", "11:50:00"]
-json_data = [{"name": "Imię", "value": "<first_name>"}, {"name": "Nazwisko", "value": "<last_name>"}]
+time_range = [
+    "10:00:00", "10:05:00", "10:10:00", "10:15:00", "10:20:00", "10:25:00",
+    "10:30:00", "10:35:00", "10:40:00", "10:45:00", "10:50:00", "10:55:00"
+]
+json_data = [
+    {"name": "Imię", "value": "<first_name>"},
+    {"name": "Nazwisko", "value": "<last_name>"},
+    {"name": "Data urodzenia", "value": "Y-m-d"}
+]
 url_template_1 = "https://rezerwacje.duw.pl/reservations/updateFormData/{order_id}/{schedule}"
 url_template_2 = "https://rezerwacje.duw.pl/reservations/reserv/{order_id}/{schedule}"
 url_template_3 = "https://rezerwacje.duw.pl/reservations/view/{order_id}"
@@ -36,20 +43,10 @@ client.post(
 )
 
 
-# find all future slots for requested date
-checking_data = data.copy()
-checking_data["time"] = (
-    datetime.strptime(data["time"], "%Y-%m-%d {time}") - timedelta(days=7)
-).strftime("%Y-%m-%d {time}")
 for time in time_range:
-    checking_data_copy = checking_data.copy()
-    checking_data_copy["time"] = checking_data_copy["time"].format(time=time)
-    response = client.post("https://rezerwacje.duw.pl/reservations/lock", data=checking_data_copy, verify=False)
-    if ok_checker.match(response.text):
-        data_copy = data.copy()
-        data_copy["time"] = data_copy["time"].format(time=time)
-        existing_data_list.append(data_copy)
-print("available slots", [i["time"] for i in existing_data_list])
+    copied_data = data.copy()
+    copied_data["time"] = copied_data["time"].format(time=time)
+    existing_data_list.append(copied_data)
 
 
 stop_loop = False
